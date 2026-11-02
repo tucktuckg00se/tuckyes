@@ -206,16 +206,18 @@ async function letterboxdFilms(user, count) {
 }
 
 // Newest songs on the playlist, read (never changed) through Spotify's API.
-// Needs SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET (GitHub repo secrets).
+// Needs SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET and SPOTIFY_REFRESH_TOKEN
+// (GitHub repo secrets). Spotify only lets new apps read a playlist as its
+// owner, so the refresh token comes from logging in once: tools/spotify-login.mjs.
 // Spotify adds songs to the end, so this reads the end and flips it.
 async function spotifyNewest(url, count) {
   const id = (/open\.spotify\.com\/(?:intl-[a-z]+\/)?playlist\/([A-Za-z0-9]+)/.exec(url || '') || [])[1];
-  const { SPOTIFY_CLIENT_ID: cid, SPOTIFY_CLIENT_SECRET: secret } = process.env;
+  const { SPOTIFY_CLIENT_ID: cid, SPOTIFY_CLIENT_SECRET: secret, SPOTIFY_REFRESH_TOKEN: refresh } = process.env;
   if (!id || !cid || !secret) return null;
   const tok = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: { Authorization: 'Basic ' + Buffer.from(`${cid}:${secret}`).toString('base64'), 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'grant_type=client_credentials',
+    body: refresh ? `grant_type=refresh_token&refresh_token=${encodeURIComponent(refresh)}` : 'grant_type=client_credentials',
     signal: AbortSignal.timeout(15000),
   });
   if (!tok.ok) throw new Error(`${tok.status} getting a Spotify token`);
@@ -223,7 +225,11 @@ async function spotifyNewest(url, count) {
   // Spotify renamed /tracks to /items for newer apps; try the new name first.
   let base = `https://api.spotify.com/v1/playlists/${id}/items`, first;
   try { first = await getJSON(`${base}?limit=1`, auth); }
-  catch { base = `https://api.spotify.com/v1/playlists/${id}/tracks`; first = await getJSON(`${base}?limit=1`, auth); }
+  catch (e) {
+    base = `https://api.spotify.com/v1/playlists/${id}/tracks`;
+    try { first = await getJSON(`${base}?limit=1`, auth); }
+    catch (e2) { throw new Error(`${e.message}; ${e2.message}${refresh ? '' : ' (no SPOTIFY_REFRESH_TOKEN; run tools/spotify-login.mjs)'}`); }
+  }
   const offset = Math.max(0, (first.total || 0) - count);
   const page = await getJSON(`${base}?limit=${count}&offset=${offset}`, auth);
   return (page.items || [])
