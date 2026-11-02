@@ -15,7 +15,7 @@ song_title:
 details:
   - Here for | Friends and movie recommendations
   - Hometown | Cashmere, WA
-background_effect: pixels
+background_effect: stars
 background_color: "#030304"
 background_dots: 
 background_image: 
@@ -30,7 +30,8 @@ Site settings.
 - song: put an audio file in content/media and write its file name here
   (like "song: my track.mp3"), plus a song_title. It never autoplays.
 - details: one per line, as "Label | Value".
-- background_effect: "pixels" for little square specks slowly drifting up,
+- background_effect: "stars" for layers of pixel stars drifting sideways with
+  the odd shooting star, "pixels" for little square specks slowly drifting up,
   "grain" for moving film grain with dust and scratches, or "none" for a
   still background.
 - background_image: a file in content/media (like a scan of a print) tiles

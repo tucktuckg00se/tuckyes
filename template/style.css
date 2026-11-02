@@ -59,11 +59,11 @@ body[data-effect="grain"]::after {
   80% { transform: translate(30px, -150px); }
   90% { transform: translate(-180px, -90px); }
 }
-body[data-effect="pixels"]::after {
+body[data-effect="pixels"]::after, body[data-effect="stars"]::after {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background: radial-gradient(ellipse at 50% 40%, transparent 40%, rgba(0, 0, 0, .85) 100%);
 }
-.fx-pixels { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; image-rendering: pixelated; }
+.fx-pixels, .fx-stars { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; image-rendering: pixelated; }
 .fx-dust { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
 
 /* ---------- top bar ---------- */

@@ -124,7 +124,7 @@ async function loadSite() {
     song: data.song || '',
     songTitle: data.song_title || '',
     details: list(data.details).map(splitPipe).map(([label, value = '']) => ({ label, value })),
-    effect: /^(none|off|false)$/i.test(data.background_effect || '') ? 'none' : /^grain$/i.test(data.background_effect || '') ? 'grain' : 'pixels',
+    effect: /^(none|off|false)$/i.test(data.background_effect || '') ? 'none' : /^(grain|stars)$/i.test(data.background_effect || '') ? data.background_effect.toLowerCase() : 'pixels',
     bgColor: data.background_color || '#030304',
     bgDots: data.background_dots || '',
     bgImage: data.background_image || '',

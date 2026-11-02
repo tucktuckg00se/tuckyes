@@ -116,6 +116,81 @@
     }
   }
 
+  // Starfield: three layers of pixel stars sliding left at different speeds,
+  // twinkling, with a shooting star now and then. Drawn at half resolution so
+  // every star is a crisp pixel. Not interactive. Holds still for anyone who
+  // has asked to reduce motion.
+  if (document.body.dataset.effect === 'stars') {
+    const c = document.createElement('canvas');
+    c.className = 'fx-stars';
+    c.setAttribute('aria-hidden', 'true');
+    document.body.prepend(c);
+    const ctx = c.getContext('2d');
+    const SCALE = 2;
+    const SPEED = 3;       // how fast everything moves
+    const STRENGTH = 1.6;  // how bright the stars are
+    const LAYERS = [ // drift, stars per pixel area, base brightness
+      { v: 0.02, per: 900, a: 0.25 },
+      { v: 0.05, per: 2600, a: 0.45 },
+      { v: 0.12, per: 7000, a: 0.8 },
+    ];
+    let w = 0, h = 0, layers = [], shoot = null;
+    const size = () => {
+      w = c.width = Math.ceil(innerWidth / SCALE);
+      h = c.height = Math.ceil(innerHeight / SCALE);
+      layers = LAYERS.map((L, i) => Array.from({ length: Math.round((w * h) / L.per) }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        v: L.v,
+        a: L.a * (0.6 + Math.random() * 0.4),
+        tw: Math.random() * Math.PI * 2,
+        s: i === 2 && Math.random() < 0.3 ? 2 : 1,
+      })));
+    };
+    const draw = (t) => {
+      ctx.clearRect(0, 0, w, h);
+      for (const L of layers) for (const s of L) {
+        const tw = 0.7 + 0.3 * Math.sin(s.tw + t / 700);
+        ctx.fillStyle = `rgba(240,240,250,${Math.min(1, s.a * tw * STRENGTH).toFixed(3)})`;
+        ctx.fillRect(Math.round(s.x), Math.round(s.y), s.s, s.s);
+      }
+      if (shoot) {
+        for (let i = 0; i < 18; i++) {
+          ctx.fillStyle = `rgba(255,255,255,${Math.max(0, shoot.life * (1 - i / 18) * 0.8 * STRENGTH).toFixed(3)})`;
+          ctx.fillRect(Math.round(shoot.x - i * 2), Math.round(shoot.y - i * 0.8), 1, 1);
+        }
+      }
+    };
+    size();
+    addEventListener('resize', size);
+    if (still) draw(0);
+    else {
+      let last = 0, clock = 0, raf = 0;
+      const tick = (t) => {
+        raf = requestAnimationFrame(tick);
+        if (t - last < 1000 / 30) return;
+        const dt = (last ? Math.min((t - last) / (1000 / 30), 3) : 1) * SPEED;
+        last = t;
+        clock += dt * (1000 / 30);
+        for (const L of layers) for (const s of L) {
+          s.x -= s.v * dt;
+          if (s.x < 0) s.x += w;
+        }
+        if (!shoot && Math.random() < 0.004 * dt) shoot = { x: Math.random() * w, y: Math.random() * h * 0.5, life: 1 };
+        if (shoot) {
+          shoot.x += 4 * dt; shoot.y += 1.6 * dt; shoot.life -= 0.03 * dt;
+          if (shoot.life <= 0) shoot = null;
+        }
+        draw(clock);
+      };
+      raf = requestAnimationFrame(tick);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) { cancelAnimationFrame(raf); raf = 0; }
+        else if (!raf) { last = 0; raf = requestAnimationFrame(tick); }
+      });
+    }
+  }
+
   // Newest songs: click one to load it into the player above.
   const spPlayer = document.querySelector('.sp-player');
   document.querySelectorAll('.sp-list a[data-track]').forEach(a => a.addEventListener('click', e => {
