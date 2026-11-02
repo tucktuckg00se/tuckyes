@@ -1,0 +1,13 @@
+{
+  "name": "tuckyes",
+  "private": true,
+  "type": "module",
+  "description": "tuckyes.com, built from markdown notes",
+  "scripts": {
+    "build": "node build.mjs",
+    "preview": "node build.mjs && python3 -m http.server 8000 -d dist"
+  },
+  "dependencies": {
+    "marked": "^18.1.2"
+  }
+}

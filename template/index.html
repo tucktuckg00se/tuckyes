@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{full_name}}'s profile</title>
+<meta name="description" content="{{full_name}}'s profile. {{location}}.">
+<meta property="og:title" content="{{full_name}}'s profile">
+<meta property="og:description" content="{{headline}}">
+<link rel="alternate" type="application/rss+xml" title="{{full_name}}" href="{{rel}}posts/feed.xml">
+<link rel="stylesheet" href="{{rel}}style.css">
+{{theme}}
+</head>
+<body data-effect="{{effect}}">
+<header class="topbar">
+  <div class="bar-inner">
+    <a class="logo" href="{{rel}}index.html">tuck<span>yes</span></a>
+    <nav aria-label="Site">
+      <a href="{{rel}}index.html">Home</a><a href="{{rel}}posts/index.html">Posts</a><a href="#stuff">Pics</a>{{recipes_nav}}<a href="https://letterboxd.com/{{letterboxd}}/">Film</a><a href="mailto:{{email}}">Mail</a>
+    </nav>
+  </div>
+</header>
+
+<main class="sheet profile">
+  <div class="left">
+    <section class="id" aria-labelledby="who">
+      <h1 id="who">{{name}}</h1>
+      <div class="id-row">
+        <div class="pic">{{portrait}}</div>
+        <div class="id-text">
+          <p class="headline">“{{headline}}”</p>
+          <p class="where">{{location}}</p>
+          {{status}}
+          {{mood}}
+        </div>
+      </div>
+      <p class="viewmy">View my: <a href="#stuff">Pics</a> <span aria-hidden="true">/</span> <a href="{{rel}}posts/index.html">Posts</a>{{recipes_viewmy}}</p>
+    </section>
+
+    <section class="box contact" aria-labelledby="h-contact">
+      <h2 id="h-contact">Contacting {{name}}</h2>
+      <ul class="actions">
+        <li><a href="mailto:{{email}}">Send Message</a></li>
+        <li><a href="mailto:{{email}}?subject=Add%20me%20to%20your%20friends">Add to Friends</a></li>
+        <li><a href="mailto:{{email}}?subject=A%20comment%20for%20your%20profile">Add Comment</a></li>
+        <li><button type="button" id="share"><span>Forward to Friend</span></button></li>
+        <li><a href="{{rel}}posts/feed.xml">Subscribe</a></li>
+        <li><a href="https://letterboxd.com/{{letterboxd}}/">Watch With Me</a></li>
+      </ul>
+    </section>
+
+    <section class="box url" aria-labelledby="h-url">
+      <h2 id="h-url">{{name}}'s URL</h2>
+      <p><a href="{{url}}">{{host}}</a></p>
+    </section>
+
+    <section class="box table interests" aria-labelledby="h-interests">
+      <h2 id="h-interests">{{name}}'s Interests</h2>
+      <table>{{interests}}</table>
+    </section>
+
+    <section class="box table details" aria-labelledby="h-details" {{details_box}}>
+      <h2 id="h-details">{{name}}'s Details</h2>
+      <table>{{details}}</table>
+    </section>
+
+    <section class="box cookbook" id="cookbook" aria-labelledby="h-cookbook" {{recipes_box}}>
+      <h2 id="h-cookbook">{{name}}'s Cookbook</h2>
+      {{recipes}}
+    </section>
+  </div>
+
+  <div class="right">
+    <section class="box music" aria-labelledby="h-music" {{music_box}}>
+      <h2 id="h-music">{{name}}'s Music</h2>
+      {{music}}
+    </section>
+
+    <section class="box posts" aria-labelledby="h-posts">
+      <h2 id="h-posts">{{name}}'s Posts <a class="sub" href="{{rel}}posts/feed.xml">Subscribe</a></h2>
+      {{posts}}
+      {{posts_more}}
+    </section>
+
+    <section class="box blurbs" aria-labelledby="h-blurbs">
+      <h2 id="h-blurbs">{{name}}'s Blurbs</h2>
+      <h3>About me:</h3>
+      {{intro}}
+      {{meet}}
+    </section>
+
+    <section class="box friends" aria-labelledby="h-friends" {{friends_box}}>
+      <h2 id="h-friends">{{name}}'s Friend Space</h2>
+      <p class="count">{{name}} has <strong>{{friend_count}}</strong> friends.</p>
+      {{friends}}
+    </section>
+
+    <section class="box stuff" id="stuff" aria-labelledby="h-stuff" {{made_box}}>
+      <h2 id="h-stuff">Stuff I've Made</h2>
+      {{made}}
+    </section>
+
+    <section class="box comments" id="comments" aria-labelledby="h-comments">
+      <h2 id="h-comments">{{name}}'s Friends Comments</h2>
+      <p class="count">Displaying <strong>{{comment_count}}</strong> of <strong>{{comment_count}}</strong> comments. <a href="mailto:{{email}}?subject=A%20comment%20for%20your%20profile">Add a comment</a></p>
+      {{comments}}
+    </section>
+  </div>
+</main>
+
+<footer class="foot">
+  <p><a href="{{rel}}posts/index.html">Posts</a><a href="{{rel}}posts/feed.xml">RSS</a><a href="https://github.com/{{github}}">Code</a><a href="https://letterboxd.com/{{letterboxd}}/">Film</a><a href="mailto:{{email}}">Mail</a></p>
+  <p class="fine">© {{year}} {{host}}. No ads, no algorithm.</p>
+</footer>
+
+<dialog class="lb" aria-label="Photo viewer">
+  <img alt="">
+  <div class="bar"><span class="cap"></span><button type="button" class="close">Close</button></div>
+</dialog>
+<script src="{{rel}}site.js"></script>
+</body>
+</html>

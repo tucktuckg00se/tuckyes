@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{page_title}}</title>
+<link rel="alternate" type="application/rss+xml" title="{{full_name}}" href="{{rel}}posts/feed.xml">
+<link rel="stylesheet" href="{{rel}}style.css">
+{{theme}}
+</head>
+<body data-effect="{{effect}}">
+<header class="topbar">
+  <div class="bar-inner">
+    <a class="logo" href="{{rel}}index.html">tuck<span>yes</span></a>
+    <nav aria-label="Site">
+      <a href="{{rel}}index.html">Home</a><a href="{{rel}}posts/index.html">Posts</a><a href="{{rel}}index.html#stuff">Pics</a>{{recipes_nav}}<a href="https://letterboxd.com/{{letterboxd}}/">Film</a><a href="mailto:{{email}}">Mail</a>
+    </nav>
+  </div>
+</header>
+
+<main class="sheet single">
+  <p class="crumbs">{{crumbs}}</p>
+  {{body}}
+</main>
+
+<footer class="foot">
+  <p><a href="{{rel}}index.html">Back to {{name}}'s profile</a><a href="{{rel}}posts/feed.xml">RSS</a><a href="mailto:{{email}}">Mail</a></p>
+  <p class="fine">© {{year}} {{host}}. No ads, no algorithm.</p>
+</footer>
+
+<dialog class="lb" aria-label="Photo viewer">
+  <img alt="">
+  <div class="bar"><span class="cap"></span><button type="button" class="close">Close</button></div>
+</dialog>
+<script src="{{rel}}site.js"></script>
+</body>
+</html>
