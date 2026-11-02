@@ -161,6 +161,8 @@ body[data-effect="pixels"]::after, body[data-effect="stars"]::after {
 .tile img + .tile-name { display: none; }
 .top8 .tile-name { font-size: 16px; font-weight: 300; }
 .tile.t1, .tile.t4 { background: #222; } .tile.t2, .tile.t5 { background: #151515; }
+.friends-all { padding: 10px; }
+.friends-all .top8 { margin-bottom: 0; }
 .top8 .label { display: block; overflow-wrap: anywhere; }
 
 /* stuff I've made */

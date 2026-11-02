@@ -62,6 +62,53 @@ function src(p, rel) {
   return rel + p.split('/').map(encodeURIComponent).join('/');
 }
 
+// ---------- images ----------
+// Photos in content/media are never changed. The build writes web-sized
+// copies to dist/media (at most FULL px on the long edge) and small square
+// thumbnails to dist/media/_thumbs/<size>/ for tiles, so a 3 MB photo used as
+// a 60px friend tile costs a few KB. Without sharp it just copies the files.
+const FULL = 1600;
+const RASTER = /\.(jpe?g|png|webp|avif|tiff?)$/i;
+const thumbJobs = new Map();
+function thumb(p, size, rel) {
+  if (!p || /^https?:\/\//.test(p) || p.replace(/^\/+/, '').includes('/') || !RASTER.test(p)) return src(p, rel);
+  const out = `_thumbs/${size}/${p.replace(/\.[^.]+$/, '')}.webp`;
+  thumbJobs.set(out, { file: p, size });
+  return src(`media/${out}`, rel);
+}
+async function buildMedia() {
+  const from = path.join(CONTENT, 'media'), to = path.join(OUT, 'media');
+  let sharp = null;
+  try { sharp = (await import('sharp')).default; } catch { warn('sharp is not installed; copying images at full size'); }
+  await mkdir(to, { recursive: true });
+  const names = (await exists(from)) ? (await readdir(from, { withFileTypes: true })).filter(e => e.isFile()).map(e => e.name) : [];
+  await Promise.all(names.map(async name => {
+    const a = path.join(from, name), b = path.join(to, name);
+    if (!sharp || !RASTER.test(name)) return cp(a, b);
+    try {
+      const img = sharp(a, { failOn: 'none' }).rotate();
+      const { width = 0, height = 0 } = await sharp(a).metadata();
+      const bytes = (await readFile(a)).length;
+      if (Math.max(width, height) <= FULL && bytes <= 400_000) return cp(a, b);
+      const resized = img.resize({ width: FULL, height: FULL, fit: 'inside', withoutEnlargement: true });
+      const ext = name.split('.').pop().toLowerCase();
+      const outBuf = await (ext === 'png' ? resized.png({ compressionLevel: 9, palette: true, quality: 90 })
+        : ext === 'webp' ? resized.webp({ quality: 82 })
+        : ext === 'avif' ? resized.avif({ quality: 60 })
+        : resized.jpeg({ quality: 82, mozjpeg: true })).toBuffer();
+      await writeFile(b, outBuf.length < bytes ? outBuf : await readFile(a));
+    } catch (e) { warn(`${name}: could not resize (${e.message}); copied as is`); await cp(a, b); }
+  }));
+  await Promise.all([...thumbJobs].map(async ([out, { file, size }]) => {
+    const a = path.join(from, file), b = path.join(to, out);
+    if (!(await exists(a))) return;
+    await mkdir(path.dirname(b), { recursive: true });
+    if (!sharp) return cp(a, b);
+    try { await sharp(a, { failOn: 'none' }).rotate().resize(size, size, { fit: 'cover', position: 'attention' }).webp({ quality: 80 }).toFile(b); }
+    catch (e) { warn(`${file}: no thumbnail (${e.message})`); await cp(a, b); }
+  }));
+}
+
 // Markdown with Obsidian extras: ![[image.png]] embeds and [[links]].
 function md(text, rel, { inline = false } = {}) {
   const t = String(text || '')
@@ -79,8 +126,9 @@ const plain = text => String(text || '')
 const fmtDate = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 const isoDate = d => d.toISOString().slice(0, 10);
 
-function photo(file, alt, rel) {
-  return `<figure><button type="button"><img src="${esc(src(file, rel))}" alt="${esc(alt)}" loading="lazy" onerror="this.closest('figure').classList.add('gone')"></button></figure>`;
+function photo(file, alt, rel, size = 0) {
+  const full = src(file, rel), shown = size ? thumb(file, size, rel) : full;
+  return `<figure><button type="button"><img src="${esc(shown)}"${shown !== full ? ` data-full="${esc(full)}"` : ''} alt="${esc(alt)}" loading="lazy" onerror="this.closest('figure').classList.add('gone')"></button></figure>`;
 }
 function photos(items, rel) {
   if (!items.length) return '';
@@ -276,7 +324,7 @@ function renderMade(items, stats, rel) {
     let thumb;
     if (pics.length) {
       const [f, a = ''] = splitPipe(pics[0]);
-      thumb = `<div class="photos thumb">${photo(f, a || title, rel)}</div>`;
+      thumb = `<div class="photos thumb">${photo(f, a || title, rel, 180)}</div>`;
     } else {
       thumb = `<div class="tile t${i % 6}" aria-hidden="true">${esc(d.short || title)}</div>`;
     }
@@ -285,9 +333,9 @@ function renderMade(items, stats, rel) {
   }).join('\n');
 }
 
-function renderFriends(friends, rel) {
-  return `<ol class="top8">${friends.slice(0, 8).map(([name, link = '', pic = ''], i) => {
-    const img = pic ? `<img src="${esc(src(pic, rel))}" alt="" loading="lazy" onerror="this.remove()">` : '';
+function renderFriends(friends, rel, max = 8) {
+  return `<ol class="top8">${friends.slice(0, max).map(([name, link = '', pic = ''], i) => {
+    const img = pic ? `<img src="${esc(thumb(pic, 160, rel))}" alt="" loading="lazy" onerror="this.remove()">` : '';
     const inner = `<span class="tile t${i % 6}">${img}<span class="tile-name">${esc(name.slice(0, 1).toUpperCase())}</span></span><span class="label">${esc(name)}</span>`;
     return `<li>${link ? `<a href="${esc(link)}">${inner}</a>` : `<span>${inner}</span>`}</li>`;
   }).join('')}</ol>`;
@@ -431,7 +479,7 @@ const hide = cond => (cond ? '' : 'hidden');
 const onProfile = shown.slice(0, site.postsOnProfile);
 const indexHtml = fill(tplIndex, {
   ...shared(''),
-  portrait: site.portrait ? `<img src="${esc(src(site.portrait, ''))}" alt="${esc(site.fullName)}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'no-photo',textContent:'No photo'}))">` : '<span class="no-photo">No photo</span>',
+  portrait: site.portrait ? `<img src="${esc(thumb(site.portrait, 320, ''))}" alt="${esc(site.fullName)}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'no-photo',textContent:'No photo'}))">` : '<span class="no-photo">No photo</span>',
   headline: esc(site.headline),
   location: esc(site.location),
   status: renderStatus(latest),
@@ -454,7 +502,7 @@ const indexHtml = fill(tplIndex, {
   meet: meetSrc.trim() ? `<h3>Who I'd like to meet:</h3>${md(meetSrc, '')}` : '',
   posts: onProfile.length ? onProfile.map(n => renderPost(n, '')).join('\n') : '<p class="empty">No posts yet.</p>',
   posts_more: shown.length > onProfile.length ? `<p class="viewall"><a href="posts/index.html">See older posts</a></p>` : '',
-  friends: renderFriends(friends, ''),
+  friends: renderFriends(friends, '') + (friends.length > 8 ? `<p class="viewall"><a href="friends/index.html">View all ${friends.length} friends</a></p>` : ''),
   friend_count: String(friends.length),
   friends_box: hide(friends.length),
   made: renderMade(made, stats, ''),
@@ -475,6 +523,7 @@ const crumb = (rel, ...parts) => `<a href="${rel}index.html">${esc(site.name)}'s
 await rm(OUT, { recursive: true, force: true });
 await mkdir(path.join(OUT, 'posts'), { recursive: true });
 await mkdir(path.join(OUT, 'cookbook'), { recursive: true });
+if (friends.length > 8) await mkdir(path.join(OUT, 'friends'), { recursive: true });
 
 const writes = [
   writeFile(path.join(OUT, 'index.html'), indexHtml),
@@ -492,8 +541,10 @@ const writes = [
   cp(path.join(ROOT, 'template', 'apple-touch-icon.png'), path.join(OUT, 'apple-touch-icon.png')),
   cp(path.join(ROOT, 'template', 'fonts'), path.join(OUT, 'fonts'), { recursive: true }),
   cp(path.join(ROOT, 'assets'), path.join(OUT, 'assets'), { recursive: true }),
-  cp(path.join(CONTENT, 'media'), path.join(OUT, 'media'), { recursive: true }),
 ];
+if (friends.length > 8) writes.push(writeFile(path.join(OUT, 'friends', 'index.html'), page('../', `${site.fullName}'s friends`, crumb('../', 'Friends'),
+  `<h1>${esc(site.name)}'s Friends</h1><section class="box friends-all"><p class="count">${esc(site.name)} has <strong>${friends.length}</strong> friends.</p>${renderFriends(friends, '../', Infinity)}</section>`)));
+writes.push(buildMedia());
 await Promise.all(writes);
 
 console.log(`Built ${shown.length} posts, ${made.length} projects, ${recipes.length} recipes, ${friends.length} friends, ${comments.length} comments, ${films.length} films${Object.keys(stats).length ? ', GitHub stats' : ''} in ${Date.now() - t0} ms.`);

@@ -219,7 +219,7 @@
   const dImg = dlg.querySelector('img'), dCap = dlg.querySelector('.cap');
   document.querySelectorAll('.photos button').forEach(b => b.addEventListener('click', () => {
     const img = b.querySelector('img');
-    dImg.src = img.currentSrc || img.src; dImg.alt = img.alt; dCap.textContent = img.alt;
+    dImg.src = img.dataset.full || img.currentSrc || img.src; dImg.alt = img.alt; dCap.textContent = img.alt;
     if (typeof dlg.showModal === 'function') dlg.showModal();
   }));
   dlg.querySelector('.close').addEventListener('click', () => dlg.close());

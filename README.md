@@ -49,7 +49,7 @@ content/cookbook/
 | `content/intro.md` | "About me." |
 | `content/meet.md` | "Who I'd like to meet." Leave it empty to drop that part. |
 | `content/interests.md` | Interests. Each line is `- **Label**: text`. Your latest Letterboxd films get added to the Movies row on their own. |
-| `content/friends.md` | Your Top 8. One friend per line: `- Name \| link \| photo`. The box stays hidden until you add someone. "Add to Friends" emails you, so you decide who goes here. |
+| `content/friends.md` | Your Top 8. One friend per line: `- Name \| link \| photo`. The box stays hidden until you add someone. The first 8 show on the profile; with more than 8, a "View all" link goes to a page with everyone. "Add to Friends" emails you, so you decide who goes here. |
 | `content/made/*.md` | Stuff I've Made. `order` sets the order. Add `github: owner/repo` and the site shows the latest release and download count automatically. Images go in `images:`, one per line, as `path \| caption`. Add `hidden: true` to take something off the page without deleting it (the M8 tracker and Carbine Camera are hidden that way right now). |
 | `content/comments/*.md` | Comments. People send them with the "Add Comment" button, which opens an email, and you paste the ones you want to post into a copy of `_template.md` here. |
 | `assets/images/` | Photos from the old site. |
@@ -110,3 +110,7 @@ npm run build -- --offline # builds without Letterboxd or GitHub
 - If Letterboxd or GitHub is down during a build, the site just builds without that part.
 - GitHub pauses scheduled workflows in public repos after 60 days without a commit. Posting a note keeps the daily rebuild going. If it pauses, re-enable it from the **Actions** tab.
 - `build.mjs` turns the notes into the site, and `template/` holds the page layout and styles. You shouldn't need to touch either to post updates.
+
+## Photos
+
+Drop photos into `content/media` at any size. The build never changes your files: it puts web-sized copies (1600px max) on the site and makes small square thumbnails for friend tiles, project thumbnails and your portrait. Clicking a thumbnail still opens the full photo.
