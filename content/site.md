@@ -3,11 +3,11 @@ name: Tucker
 full_name: Tucker Wagner
 url: https://tuckyes.com
 email: mtuckerwagner@gmail.com
-portrait: assets/images/pxl-20240631.png
+portrait: avatar.jpg
 github: tucktuckg00se
 letterboxd: tucktuckg00se
 headline: More of an artist than an engineer, but in a lot of ways kind of both.
-location: Wenatchee Valley, Washington
+location: Wenatchee, WA
 mood: tinkering
 playlist: https://open.spotify.com/playlist/5D7wogrMBmPQNUwFf4NxsI
 song: 
@@ -15,12 +15,12 @@ song_title:
 details:
   - Here for | Friends and movie recommendations
   - Hometown | Cashmere, WA
-background_effect: grain
+background_effect: pixels
 background_color: "#030304"
 background_dots: 
 background_image: 
 posts_on_profile: 8
-films_to_show: 4
+films_to_show: 0
 ---
 Site settings.
 
@@ -30,7 +30,10 @@ Site settings.
 - song: put an audio file in content/media and write its file name here
   (like "song: my track.mp3"), plus a song_title. It never autoplays.
 - details: one per line, as "Label | Value".
-- background_effect: "grain" for moving film grain with dust and scratches,
-  or "none" for a still background.
+- background_effect: "pixels" for little square specks slowly drifting up,
+  "grain" for moving film grain with dust and scratches, or "none" for a
+  still background.
 - background_image: a file in content/media (like a scan of a print) tiles
-  behind the page, under the grain. background_dots adds little dots instead.
+  behind the page, under the effect. background_dots adds little dots instead.
+- films_to_show: how many recent Letterboxd films to list under Movies.
+  0 turns the list off.

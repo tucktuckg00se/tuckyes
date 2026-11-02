@@ -1,1 +1,1 @@
-Artists, idealists, tinkerers, and anyone who wants to talk about movies.
+Anyone who wants to talk about movies.

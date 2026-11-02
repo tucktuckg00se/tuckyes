@@ -124,12 +124,12 @@ async function loadSite() {
     song: data.song || '',
     songTitle: data.song_title || '',
     details: list(data.details).map(splitPipe).map(([label, value = '']) => ({ label, value })),
-    effect: /^(none|off|false)$/i.test(data.background_effect || '') ? 'none' : 'grain',
+    effect: /^(none|off|false)$/i.test(data.background_effect || '') ? 'none' : /^grain$/i.test(data.background_effect || '') ? 'grain' : 'pixels',
     bgColor: data.background_color || '#030304',
     bgDots: data.background_dots || '',
     bgImage: data.background_image || '',
     postsOnProfile: parseInt(data.posts_on_profile, 10) || 8,
-    filmsToShow: parseInt(data.films_to_show, 10) || 4,
+    filmsToShow: Number.isNaN(parseInt(data.films_to_show, 10)) ? 4 : parseInt(data.films_to_show, 10),
   };
 }
 
@@ -203,6 +203,34 @@ async function letterboxdFilms(user, count) {
     .map(s => ({ title: tag(s, 'letterboxd:filmTitle'), year: tag(s, 'letterboxd:filmYear'), rating: parseFloat(tag(s, 'letterboxd:memberRating')), link: tag(s, 'link') }))
     .filter(f => f.title)
     .slice(0, count);
+}
+
+// Newest songs on the playlist, read (never changed) through Spotify's API.
+// Needs SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET (GitHub repo secrets).
+// Spotify adds songs to the end, so this reads the end and flips it.
+async function spotifyNewest(url, count) {
+  const id = (/open\.spotify\.com\/(?:intl-[a-z]+\/)?playlist\/([A-Za-z0-9]+)/.exec(url || '') || [])[1];
+  const { SPOTIFY_CLIENT_ID: cid, SPOTIFY_CLIENT_SECRET: secret } = process.env;
+  if (!id || !cid || !secret) return null;
+  const tok = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { Authorization: 'Basic ' + Buffer.from(`${cid}:${secret}`).toString('base64'), 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=client_credentials',
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!tok.ok) throw new Error(`${tok.status} getting a Spotify token`);
+  const auth = { Authorization: `Bearer ${(await tok.json()).access_token}` };
+  // Spotify renamed /tracks to /items for newer apps; try the new name first.
+  let base = `https://api.spotify.com/v1/playlists/${id}/items`, first;
+  try { first = await getJSON(`${base}?limit=1`, auth); }
+  catch { base = `https://api.spotify.com/v1/playlists/${id}/tracks`; first = await getJSON(`${base}?limit=1`, auth); }
+  const offset = Math.max(0, (first.total || 0) - count);
+  const page = await getJSON(`${base}?limit=${count}&offset=${offset}`, auth);
+  return (page.items || [])
+    .map(it => ({ added: it.added_at, t: it.item || it.track }))
+    .filter(x => x.t && x.t.id && x.t.type !== 'episode')
+    .map(x => ({ id: x.t.id, title: x.t.name, artists: (x.t.artists || []).map(a => a.name).join(', '), added: x.added }))
+    .reverse();
 }
 
 // Spotify share links become embeds: open.spotify.com/playlist/ID -> /embed/playlist/ID
@@ -353,11 +381,16 @@ const friends = lines(friendsSrc).map(splitPipe).filter(f => f[0]);
 const shown = posts.filter(n => n.body || list(n.data.images).length || n.data.image);
 
 let films = [];
+let newest = null;
 const stats = {};
 if (!OFFLINE) {
-  if (site.letterboxd) {
+  if (site.letterboxd && site.filmsToShow > 0) {
     try { films = await letterboxdFilms(site.letterboxd, site.filmsToShow); }
     catch (e) { warn(`Letterboxd skipped: ${e.message}`); }
+  }
+  if (site.playlist) {
+    try { newest = await spotifyNewest(site.playlist, 10); }
+    catch (e) { warn(`Newest Spotify songs skipped, showing the plain playlist: ${e.message}`); }
   }
   for (const repo of new Set(made.map(m => m.data.github).filter(Boolean))) {
     try { const s = await githubStats(repo); if (s) stats[repo] = s; }
@@ -400,6 +433,12 @@ const indexHtml = fill(tplIndex, {
   music: (() => {
     const sp = spotifyEmbed(site.playlist);
     if (site.playlist && !sp) warn('playlist in site.md is not a Spotify link I recognize');
+    if (sp && newest && newest.length) {
+      const top = newest[0];
+      const player = `<iframe class="sp-player" title="Newest song on ${esc(site.name)}'s playlist" src="https://open.spotify.com/embed/track/${esc(top.id)}?utm_source=generator&theme=0" width="100%" height="152" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>`;
+      const row = (t, i) => `<li${i === 0 ? ' class="on"' : ''}><a href="https://open.spotify.com/track/${esc(t.id)}" data-track="${esc(t.id)}">${esc(t.title)}</a> <span class="by">· ${esc(t.artists)}</span></li>`;
+      return `${player}<p class="sp-label">Newest on the playlist</p><ol class="sp-list">${newest.map(row).join('')}</ol><p class="music-link"><a href="${esc(sp.link)}">Open the whole playlist in Spotify</a></p>`;
+    }
     const spotify = sp ? `<iframe title="${esc(site.name)}'s playlist on Spotify" src="${esc(sp.embed)}" width="100%" height="152" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe><p class="music-link"><a href="${esc(sp.link)}">Open in Spotify</a></p>` : '';
     const song = site.song ? `<p class="now">${esc(site.songTitle || 'Profile song')}</p><audio controls preload="none" src="${esc(src(site.song, ''))}"></audio>` : '';
     return song + spotify;
@@ -442,6 +481,9 @@ const writes = [
     crumb('../', `<a href="index.html">Cookbook</a>`, ...(r.category ? [`<a href="index.html#cat-${esc(slugify(r.category))}">${esc(r.category)}</a>`] : []), esc(r.title)), renderRecipe(r, '../')))),
   cp(path.join(ROOT, 'template', 'style.css'), path.join(OUT, 'style.css')),
   cp(path.join(ROOT, 'template', 'site.js'), path.join(OUT, 'site.js')),
+  cp(path.join(ROOT, 'template', 'favicon.svg'), path.join(OUT, 'favicon.svg')),
+  cp(path.join(ROOT, 'template', 'favicon-32.png'), path.join(OUT, 'favicon-32.png')),
+  cp(path.join(ROOT, 'template', 'apple-touch-icon.png'), path.join(OUT, 'apple-touch-icon.png')),
   cp(path.join(ROOT, 'template', 'fonts'), path.join(OUT, 'fonts'), { recursive: true }),
   cp(path.join(ROOT, 'assets'), path.join(OUT, 'assets'), { recursive: true }),
   cp(path.join(CONTENT, 'media'), path.join(OUT, 'media'), { recursive: true }),
