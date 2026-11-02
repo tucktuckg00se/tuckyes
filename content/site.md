@@ -20,7 +20,7 @@ background_color: "#030304"
 background_dots: 
 background_image: 
 posts_on_profile: 8
-films_to_show: 0
+films_to_show: 4
 ---
 Site settings.
 
