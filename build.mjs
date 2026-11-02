@@ -296,7 +296,7 @@ function renderFriends(friends, rel) {
 function renderInterests(text, films, rel) {
   const rows = text.split(/\r?\n/).map(l => /^\s*[-*]\s+\*\*(.+?)\*\*\s*[:\-–—]?\s*(.*)$/.exec(l)).filter(Boolean).map(([, k, v]) => [k, md(v, rel, { inline: true })]);
   if (films.length) {
-    const recent = `Recently watched: ${films.map(f => `<a href="${esc(f.link)}">${esc(f.title)}</a>${f.year ? ` (${esc(f.year)})` : ''}${stars(f.rating) ? ` <span class="stars" aria-label="${f.rating} out of 5">${stars(f.rating)}</span>` : ''}`).join(', ')}.`;
+    const recent = `Recently watched:<ul class="watched">${films.map(f => `<li><a href="${esc(f.link)}">${esc(f.title)}</a>${f.year ? ` (${esc(f.year)})` : ''}${stars(f.rating) ? ` <span class="stars" aria-label="${f.rating} out of 5">${stars(f.rating)}</span>` : ''}</li>`).join('')}</ul>`;
     const row = rows.find(([k]) => /movie|film/i.test(k));
     if (row) row[1] += `<br>${recent}`; else rows.push(['Movies', recent]);
   }

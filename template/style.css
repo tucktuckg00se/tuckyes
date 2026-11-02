@@ -125,6 +125,7 @@ body[data-effect="pixels"]::after, body[data-effect="stars"]::after {
 .box th { width: 90px; text-align: left; font-weight: 700; color: var(--bright); background: var(--cell-th); }
 .box td { background: var(--cell-td); }
 .stars { white-space: nowrap; }
+.watched { margin: 2px 0 0; padding-left: 18px; }
 
 /* ---------- right column ---------- */
 .music iframe { display: block; width: calc(100% - 20px); border: 0; border-radius: 12px; background: transparent; color-scheme: normal; }

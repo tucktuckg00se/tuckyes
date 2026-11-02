@@ -1,4 +1,4 @@
 - **General**: Lino printing, sewing, embroidery, hydroponics, fishing, hiking, cooking, and making things that work and fixing things that don't.
-- **Music**: I've been making it for about ten years.
+- **Music**: I've been making it for about 13 years.
 - **Movies**: A lot. What I've been watching is on [Letterboxd](https://letterboxd.com/tucktuckg00se/).
 - **Television**: I used to make it.
