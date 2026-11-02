@@ -12,7 +12,7 @@
   --page-bg-image: none;
   --page-bg-size: auto;
 
-  --sheet: #0a0a0a;
+  --sheet: rgba(10, 10, 10, .8);
   --box: #0d0d0d;
   --head: #1d1d1d;
   --cell-th: #171717;
