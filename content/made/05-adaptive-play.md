@@ -7,4 +7,4 @@ link_text: Watch it.
 images:
   - adaptive-play.jpg | Adaptive Play class at Wenatchee HS
 ---
-A story I made for NCWLIFE about the Adaptive Play class at Wenatchee High School. It's one of the videos I'm proudest of.
+A story I filmed and edited for NCWLIFE about the Adaptive Play class at Wenatchee High School.
