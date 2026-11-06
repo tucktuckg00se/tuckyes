@@ -45,7 +45,7 @@ content/cookbook/
 
 | File | What it is |
 | --- | --- |
-| `content/site.md` | Name, headline, location, default mood, the Details table, your Spotify playlist, the page background, and your email, GitHub and Letterboxd usernames. |
+| `content/site.md` | Name, headline, location, the weather spot (`weather: latitude, longitude`, shown in degrees T; empty hides it), default mood, the Details table, your Spotify playlist, the page background, and your email, GitHub and Letterboxd usernames. |
 | `content/intro.md` | "About me." |
 | `content/meet.md` | "Who I'd like to meet." Leave it empty to drop that part. |
 | `content/interests.md` | Interests. Each line is `- **Label**: text`. Your latest Letterboxd films get added to the Movies row on their own. |
@@ -55,6 +55,39 @@ content/cookbook/
 | `assets/images/` | Photos from the old site. |
 
 **Customizing the look:** in `site.md`, change `background_color` and `background_dots`, or set `background_image` to a file in `content/media` (a scan of one of your prints would look great tiled) and it repeats behind the page.
+
+## Spotify: newest songs on your profile
+
+Setting `playlist:` in `site.md` puts Spotify's player in the Music box. That part needs no setup. With some setup, the build also reads the playlist and lists the 10 newest songs, with the newest one loaded in the player. Click any song in the list to play it.
+
+It takes a few steps because Spotify only shows a playlist's songs to the account that owns it. An app key on its own gets turned away (a 403 error), so the build reads the playlist as you, using a token from a one-time login. The login is read-only. It can read your playlists and nothing else.
+
+1. **Make a Spotify app.**
+   - Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard), log in with the account that owns the playlist, and choose **Create app**. Any name and description will do.
+   - Under **Redirect URIs**, add exactly `http://127.0.0.1:8888/callback`.
+   - Tick **Web API**, then save.
+   - The app's **Settings** page shows the **Client ID**. The **Client secret** is under **View client secret**.
+2. **Save the ID and secret in GitHub.** Repo **Settings → Secrets and variables → Actions**. Stay on the **Secrets** tab and choose **New repository secret**. Make one secret called `SPOTIFY_CLIENT_ID` and one called `SPOTIFY_CLIENT_SECRET`.
+   - They have to be **repository secrets**. Don't put them on the **Variables** tab, and don't put them under **Settings → Environments → github-pages**. The build step can't see either of those, so the songs list quietly won't show up.
+   - Or do it from a terminal, which makes repository secrets automatically (each command asks for the value):
+     ```sh
+     gh secret set SPOTIFY_CLIENT_ID -R tucktuckg00se/tuckyes
+     gh secret set SPOTIFY_CLIENT_SECRET -R tucktuckg00se/tuckyes
+     ```
+3. **Log in once.** You need the [GitHub CLI](https://cli.github.com) installed and signed in (`gh auth login`). Then, from the repo folder, run:
+   ```sh
+   node tools/spotify-login.mjs
+   ```
+   - It asks for the Client ID and secret, then opens a Spotify login page. If no browser opens, copy the link it prints.
+   - Log in as the playlist's owner and agree.
+   - The tool saves the token straight to the repo's secrets as `SPOTIFY_REFRESH_TOKEN`. It never shows the token or writes it to a file.
+4. **Rebuild.** Push anything, or start the workflow from the **Actions** tab. The newest songs show up in the Music box.
+
+**If the list disappears:** the site goes back to the plain playlist player. In the build log under **Actions**, a line starting with "Newest Spotify songs skipped" says why.
+- If you reset the client secret in the Spotify dashboard, update `SPOTIFY_CLIENT_SECRET` (step 2).
+- If that doesn't fix it, or you removed the app at [spotify.com/account/apps](https://www.spotify.com/account/apps/), run the login again (step 3).
+
+**Previewing on your computer:** the token only lives in GitHub, so `npm run preview` shows the plain playlist player. That's normal. The list shows up once GitHub builds the site.
 
 ## Writing from Obsidian
 
@@ -96,18 +129,19 @@ content/cookbook/
    | CNAME | www | tucktuckg00se.github.io |
 
 7. **Turn on HTTPS.** Once DNS has caught up (up to a day), tick **Enforce HTTPS** on the Pages settings screen.
+8. **Optional: newest songs from Spotify.** See [Spotify: newest songs on your profile](#spotify-newest-songs-on-your-profile).
 
 ## Previewing on your computer
 
 ```sh
 npm install
 npm run preview            # builds, then serves it at http://localhost:8000
-npm run build -- --offline # builds without Letterboxd or GitHub
+npm run build -- --offline # builds without Letterboxd, GitHub or Spotify
 ```
 
 ## Good to know
 
-- If Letterboxd or GitHub is down during a build, the site just builds without that part.
+- If Letterboxd, GitHub or Spotify is down during a build, the site just builds without that part.
 - GitHub pauses scheduled workflows in public repos after 60 days without a commit. Posting a note keeps the daily rebuild going. If it pauses, re-enable it from the **Actions** tab.
 - `build.mjs` turns the notes into the site, and `template/` holds the page layout and styles. You shouldn't need to touch either to post updates.
 

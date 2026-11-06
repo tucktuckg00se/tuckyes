@@ -8,6 +8,7 @@ github: tucktuckg00se
 letterboxd: tucktuckg00se
 headline: More of an artist than an engineer, but in a lot of ways kind of both.
 location: Wenatchee, WA
+weather: 47.42, -120.31
 mood: tinkering
 playlist: https://open.spotify.com/playlist/5D7wogrMBmPQNUwFf4NxsI
 song: 
@@ -29,6 +30,9 @@ Site settings.
   player at the top of your profile. Leave it empty to hide it.
 - song: put an audio file in content/media and write its file name here
   (like "song: my track.mp3"), plus a song_title. It never autoplays.
+- weather: latitude, longitude for the Weather box, shown in degrees T (with
+  F and C small beside it). Visitors who allow location access can switch it
+  to their own weather. Leave it empty to hide the box.
 - details: one per line, as "Label | Value".
 - background_effect: "stars" for layers of pixel stars drifting sideways with
   the odd shooting star, "pixels" for little square specks slowly drifting up,

@@ -167,6 +167,13 @@ async function loadSite() {
     letterboxd: data.letterboxd || '',
     headline: data.headline || '',
     location: data.location || '',
+    weather: (() => {
+      if (!data.weather) return null;
+      const [lat, lon] = String(data.weather).split(',').map(Number);
+      if (Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180) return { lat, lon };
+      warn('weather in site.md should be "latitude, longitude", like "47.42, -120.31"');
+      return null;
+    })(),
     mood: data.mood || '',
     playlist: data.playlist || '',
     song: data.song || '',
@@ -482,6 +489,7 @@ const indexHtml = fill(tplIndex, {
   portrait: site.portrait ? `<img src="${esc(thumb(site.portrait, 320, ''))}" alt="${esc(site.fullName)}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'no-photo',textContent:'No photo'}))">` : '<span class="no-photo">No photo</span>',
   headline: esc(site.headline),
   location: esc(site.location),
+  weather: site.weather ? `data-lat="${site.weather.lat}" data-lon="${site.weather.lon}" data-place="${esc(site.location.split(',')[0].trim() || 'Wenatchee')}"` : '',
   status: renderStatus(latest),
   mood: mood ? `<p class="mood">Mood: <strong>${esc(mood)}</strong></p>` : '',
   music: (() => {

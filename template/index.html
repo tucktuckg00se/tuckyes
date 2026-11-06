@@ -52,9 +52,9 @@
       </ul>
     </section>
 
-    <section class="box url" aria-labelledby="h-url">
-      <h2 id="h-url">{{name}}'s URL</h2>
-      <p><a href="{{url}}">{{host}}</a></p>
+    <section class="box weather" aria-labelledby="h-weather" hidden {{weather}}>
+      <h2 id="h-weather">{{name}}'s Weather</h2>
+      <div class="wx" aria-live="polite"></div>
     </section>
 
     <section class="box table interests" aria-labelledby="h-interests">
@@ -70,6 +70,11 @@
     <section class="box cookbook" id="cookbook" aria-labelledby="h-cookbook" {{recipes_box}}>
       <h2 id="h-cookbook">{{name}}'s Cookbook</h2>
       {{recipes}}
+    </section>
+
+    <section class="box url" aria-labelledby="h-url">
+      <h2 id="h-url">{{name}}'s URL</h2>
+      <p><a href="{{url}}">{{host}}</a></p>
     </section>
   </div>
 

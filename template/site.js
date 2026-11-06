@@ -191,6 +191,52 @@
     }
   }
 
+  // Weather, in degrees T: T = (F - 68) / 4.14, so 68°F is 0°T. Shows the
+  // profile's town by default. Only uses the visitor's own weather if they've
+  // already let this site see their location, or they click "use mine".
+  // Their position is rounded to about a kilometer and never stored.
+  const wx = document.querySelector('.weather[data-lat]');
+  if (wx && window.fetch) {
+    wx.querySelector('.wx').innerHTML = '<p class="wx-t"><span class="wx-n"></span><abbr title="°T = (°F − 68) ÷ 4.14">°T</abbr></p>'
+      + '<div class="wx-side"><p class="wx-fc"></p><p class="wx-where"><span class="wx-place"></span>'
+      + '<span class="wx-mine"> · <button type="button">use mine</button></span></p></div>';
+    const $ = s => wx.querySelector(s);
+    const mine = $('.wx-mine'), btn = mine.querySelector('button');
+    // fixed decimals, a real minus sign, and never "-0"
+    const fmt = (n, d = 0) => (Math.abs(n) < 0.5 / 10 ** d ? 0 : n).toFixed(d).replace('-', '−');
+    const show = async (lat, lon, label) => {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m&temperature_unit=fahrenheit`;
+      const res = await fetch(url, AbortSignal.timeout ? { signal: AbortSignal.timeout(8000) } : {});
+      if (!res.ok) throw new Error(`${res.status} from Open-Meteo`);
+      const f = (await res.json())?.current?.temperature_2m;
+      if (typeof f !== 'number') throw new Error('no temperature from Open-Meteo');
+      $('.wx-n').textContent = fmt((f - 68) / 4.14, 1);
+      $('.wx-fc').textContent = `${fmt(f)}°F · ${fmt((f - 32) * 5 / 9)}°C`;
+      $('.wx-place').textContent = label;
+      wx.hidden = false;
+    };
+    const town = () => show(wx.dataset.lat, wx.dataset.lon, `in ${wx.dataset.place}`);
+    const visitor = () => new Promise((ok, no) => navigator.geolocation.getCurrentPosition(ok, no,
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 30 * 60 * 1000 }))
+      .then(p => show(p.coords.latitude.toFixed(2), p.coords.longitude.toFixed(2), 'where you are'));
+
+    btn.addEventListener('click', () => {
+      btn.disabled = true;
+      btn.textContent = 'finding you…';
+      visitor().then(() => { mine.hidden = true; }, () => { mine.hidden = true; });
+    });
+
+    // Never ask on page load. Only check whether the answer is already yes.
+    const geo = 'geolocation' in navigator;
+    const state = geo && navigator.permissions
+      ? navigator.permissions.query({ name: 'geolocation' }).then(s => s.state, () => 'prompt')
+      : Promise.resolve(geo ? 'prompt' : 'denied');
+    state.then(s => {
+      if (s !== 'prompt') mine.hidden = true;
+      return s === 'granted' ? visitor().catch(town) : town();
+    }).catch(() => {});
+  }
+
   // Newest songs: click one to load it into the player above.
   const spPlayer = document.querySelector('.sp-player');
   document.querySelectorAll('.sp-list a[data-track]').forEach(a => a.addEventListener('click', e => {

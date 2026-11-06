@@ -119,6 +119,18 @@ body[data-effect="pixels"]::after, body[data-effect="stars"]::after {
 
 .url p { font-weight: 700; word-break: break-all; }
 
+/* weather, in degrees T: big T on the left, F, C and place beside it */
+.wx { display: flex; align-items: center; gap: 14px; }
+.wx p { margin: 0; }
+.wx-t { flex: none; font-size: 32px; font-weight: 700; line-height: 1; color: var(--bright); letter-spacing: -.01em; }
+.wx-t abbr { text-decoration: none; font-weight: 400; color: var(--text); cursor: help; }
+.wx-side { min-width: 0; }
+.wx-fc { font-size: 13px; font-weight: 700; color: var(--text); }
+.wx-where { font-size: 12px; color: var(--muted); }
+.wx-where button { font: inherit; color: var(--text); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-decoration-color: #666; text-underline-offset: 2px; }
+.wx-where button:hover { color: var(--bright); text-decoration-color: var(--bright); }
+.wx-where button:disabled { cursor: default; text-decoration: none; }
+
 /* tables: the old two-tone cells */
 .box table { width: 100%; border-collapse: separate; border-spacing: 3px; font-size: 13px; }
 .box th, .box td { padding: 5px 8px; vertical-align: top; }
@@ -233,9 +245,9 @@ dialog.lb button { font: 700 13px var(--font); background: var(--head); color: v
   /* one column: put the posts near the top instead of after every info box */
   .profile { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .left, .right { display: contents; }
-  .id { order: 1; } .contact { order: 2; } .music { order: 3; } .posts { order: 4; } .blurbs { order: 5; }
-  .interests { order: 6; } .details { order: 7; } .friends { order: 8; } .stuff { order: 9; }
-  .cookbook { order: 10; } .comments { order: 11; } .url { order: 12; }
+  .id { order: 1; } .contact { order: 2; } .weather { order: 3; } .music { order: 4; } .posts { order: 5; }
+  .blurbs { order: 6; } .interests { order: 7; } .details { order: 8; } .friends { order: 9; } .stuff { order: 10; }
+  .cookbook { order: 11; } .comments { order: 12; } .url { order: 13; }
   .sheet { margin-top: 0; border-left: 0; border-right: 0; }
 }
 @media (max-width: 560px) {
