@@ -45,13 +45,13 @@ content/cookbook/
 
 | File | What it is |
 | --- | --- |
-| `content/site.md` | Name, headline, location, the weather spot (`weather: latitude, longitude`, shown in degrees T; empty hides it), default mood, the Details table, your Spotify playlist, the page background, and your email, GitHub and Letterboxd usernames. |
+| `content/site.md` | Name, headline, location, the weather spot (`weather: latitude, longitude`, shown in degrees T; empty hides it), default mood, how comments work (`comments: email` or `github`), the Details table, your Spotify playlist, the page background, and your email, GitHub and Letterboxd usernames. |
 | `content/intro.md` | "About me." |
 | `content/meet.md` | "Who I'd like to meet." Leave it empty to drop that part. |
 | `content/interests.md` | Interests. Each line is `- **Label**: text`. Your latest Letterboxd films get added to the Movies row on their own. |
 | `content/friends.md` | Your Top 8. One friend per line: `- Name \| link \| photo`. The box stays hidden until you add someone. The first 8 show on the profile; with more than 8, a "View all" link goes to a page with everyone. "Add to Friends" emails you, so you decide who goes here. |
 | `content/made/*.md` | Stuff I've Made. `order` sets the order. Add `github: owner/repo` and the site shows the latest release and download count automatically. Images go in `images:`, one per line, as `path \| caption`. Add `hidden: true` to take something off the page without deleting it (the M8 tracker and Carbine Camera are hidden that way right now). |
-| `content/comments/*.md` | Comments. People send them with the "Add Comment" button, which opens an email, and you paste the ones you want to post into a copy of `_template.md` here. |
+| `content/comments/*.md` | Comments people emailed you. Paste the ones you want to post into a copy of `_template.md` here. They show in either comments mode. See [Friends Comments](#friends-comments-email-or-github). |
 | `assets/images/` | Photos from the old site. |
 
 **Customizing the look:** in `site.md`, change `background_color` and `background_dots`, or set `background_image` to a file in `content/media` (a scan of one of your prints would look great tiled) and it repeats behind the page.
@@ -88,6 +88,35 @@ It takes a few steps because Spotify only shows a playlist's songs to the accoun
 - If that doesn't fix it, or you removed the app at [spotify.com/account/apps](https://www.spotify.com/account/apps/), run the login again (step 3).
 
 **Previewing on your computer:** the token only lives in GitHub, so `npm run preview` shows the plain playlist player. That's normal. The list shows up once GitHub builds the site.
+
+## Friends Comments: email or GitHub
+
+The `comments:` line in `site.md` decides what "Add Comment" does.
+
+**`comments: email` (the default).** Add Comment opens an email to you. To post a comment, copy `content/comments/_template.md`, fill in their name, the date and (if you like) a link, then paste in what they wrote.
+
+**`comments: github`.** Add Comment opens a short form on GitHub, and each comment becomes an issue on this repo. **Nothing shows on the site until you approve it.** Approved comments show with the person's GitHub name and picture. A "No GitHub? Email it" link stays next to Add Comment for everyone else, and comments you paste into `content/comments/` still show alongside the GitHub ones, newest first.
+
+Turning it on:
+
+1. **Make two labels,** `comment` and `approved`. Use the repo's **Issues → Labels → New label**, or:
+   ```sh
+   gh label create comment -R tucktuckg00se/tuckyes
+   gh label create approved -R tucktuckg00se/tuckyes
+   ```
+   These already exist on this repo.
+2. **Set `comments: github`** in `site.md`, then commit and push.
+3. **Make sure you hear about new comments.** If GitHub isn't already notifying you about this repo's issues, go to the repo page and choose **Watch → Custom → Issues**.
+
+**Approving a comment:** open the issue and add the `approved` label. You can do this on the website or in the GitHub app. The comment shows up at the next build, which runs every morning. To post it right away, go to **Actions → Build and publish tuckyes.com → Run workflow**. Only issues with both `comment` and `approved` show, so other issues on the repo never end up on the page. You can close an issue once it's approved, and it stays on the site.
+
+**Taking one down:** remove the `approved` label or delete the issue. It's gone after the next build.
+
+**Good to know:**
+- People need a GitHub account to comment this way. The email link covers everyone else.
+- Someone can still edit their comment after you approve it, and the edit shows after the next build. Removing `approved` takes it down.
+- Switching back to `comments: email` hides the GitHub comments without deleting anything.
+- Pictures in comments always show at the same height, so they can't make the page jump while they load.
 
 ## Writing from Obsidian
 
@@ -130,6 +159,7 @@ It takes a few steps because Spotify only shows a playlist's songs to the accoun
 
 7. **Turn on HTTPS.** Once DNS has caught up (up to a day), tick **Enforce HTTPS** on the Pages settings screen.
 8. **Optional: newest songs from Spotify.** See [Spotify: newest songs on your profile](#spotify-newest-songs-on-your-profile).
+9. **Optional: comments through GitHub.** See [Friends Comments: email or GitHub](#friends-comments-email-or-github).
 
 ## Previewing on your computer
 
@@ -141,7 +171,7 @@ npm run build -- --offline # builds without Letterboxd, GitHub or Spotify
 
 ## Good to know
 
-- If Letterboxd, GitHub or Spotify is down during a build, the site just builds without that part.
+- If Letterboxd, GitHub or Spotify is down during a build, the site just builds without that part. That includes GitHub comments, which come back at the next build.
 - GitHub pauses scheduled workflows in public repos after 60 days without a commit. Posting a note keeps the daily rebuild going. If it pauses, re-enable it from the **Actions** tab.
 - `build.mjs` turns the notes into the site, and `template/` holds the page layout and styles. You shouldn't need to touch either to post updates.
 

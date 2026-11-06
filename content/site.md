@@ -10,6 +10,7 @@ headline: More of an artist than an engineer, but in a lot of ways kind of both.
 location: Wenatchee, WA
 weather: 47.42, -120.31
 mood: tinkering
+comments: github
 playlist: https://open.spotify.com/playlist/5D7wogrMBmPQNUwFf4NxsI
 song: 
 song_title: 
@@ -33,6 +34,10 @@ Site settings.
 - weather: latitude, longitude for the Weather box, shown in degrees T (with
   F and C small beside it). Visitors who allow location access can switch it
   to their own weather. Leave it empty to hide the box.
+- comments: "email" (the default) makes Add Comment open an email, and you
+  paste the ones you like into content/comments. "github" makes it open a
+  GitHub issue form instead; a comment shows up once you add the "approved"
+  label to its issue (at the next daily build). See the README.
 - details: one per line, as "Label | Value".
 - background_effect: "stars" for layers of pixel stars drifting sideways with
   the odd shooting star, "pixels" for little square specks slowly drifting up,

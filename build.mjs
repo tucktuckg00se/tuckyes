@@ -9,6 +9,7 @@
 import { readFile, writeFile, readdir, mkdir, cp, rm, access } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 import { marked } from 'marked';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -175,6 +176,11 @@ async function loadSite() {
       return null;
     })(),
     mood: data.mood || '',
+    comments: (() => {
+      const v = String(data.comments || '').trim().toLowerCase();
+      if (v && v !== 'email' && v !== 'github') warn(`comments in site.md should be "email" or "github", not "${data.comments}"; using email`);
+      return v === 'github' ? 'github' : 'email';
+    })(),
     playlist: data.playlist || '',
     song: data.song || '',
     songTitle: data.song_title || '',
@@ -227,6 +233,39 @@ async function getJSON(url, headers = {}) {
   const res = await fetch(url, { headers: { 'User-Agent': 'tuckyes-build', ...headers }, signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`${res.status} from ${url}`);
   return res.json();
+}
+
+// The repo this site lives in, as "owner/repo". GitHub Actions says so in
+// GITHUB_REPOSITORY; on your computer it comes from the git remote.
+function siteRepo() {
+  if (/^[\w.-]+\/[\w.-]+$/.test(process.env.GITHUB_REPOSITORY || '')) return process.env.GITHUB_REPOSITORY;
+  try {
+    const url = execFileSync('git', ['remote', 'get-url', 'origin'], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    return (/github\.com[:/]([\w.-]+\/[\w.-]+?)(?:\.git)?\/?$/.exec(url) || [])[1] || null;
+  } catch { return null; }
+}
+
+// Comments left as GitHub issues through .github/ISSUE_TEMPLATE/comment.yml.
+// Only issues with both the "comment" and "approved" labels show, so nothing
+// goes up until Tucker adds "approved". Uses GitHub's own sanitized HTML for
+// the text (never md(), which would let raw HTML from strangers through).
+async function githubComments(repo) {
+  const headers = { Accept: 'application/vnd.github.full+json' };
+  if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  let issues = [];
+  for (let page = 1; page <= 3; page++) {
+    const batch = await getJSON(`https://api.github.com/repos/${repo}/issues?labels=comment,approved&state=all&per_page=100&page=${page}`, headers);
+    issues = issues.concat(batch);
+    if (batch.length < 100) break;
+  }
+  return issues.filter(i => !i.pull_request && i.user).map(i => ({
+    name: i.user.login,
+    link: i.user.html_url,
+    avatar: i.user.avatar_url ? `${i.user.avatar_url}${i.user.avatar_url.includes('?') ? '&' : '?'}s=160` : '',
+    date: new Date(i.created_at),
+    // the issue form puts its field label at the top as a heading; drop it
+    html: String(i.body_html || '').replace(/^\s*<h3[^>]*>\s*Your comment\s*<\/h3>\s*/i, '').trim(),
+  })).filter(c => c.html);
 }
 
 async function githubStats(repo) {
@@ -360,11 +399,16 @@ function renderInterests(text, films, rel) {
 
 const renderDetails = details => details.map(({ label, value }) => `<tr><th scope="row">${esc(label)}</th><td>${esc(value)}</td></tr>`).join('');
 
-function renderComments(comments, rel) {
+// Comments come in two kinds, both shaped { name, link, avatar, date, html }:
+// ones Tucker pasted into content/comments, and approved GitHub issues.
+function renderComments(comments) {
   if (!comments.length) return '<p class="empty">No comments yet. Be the first.</p>';
   return comments.map(c => {
-    const who = c.data.link ? `<a href="${esc(c.data.link)}">${esc(c.data.name || 'Someone')}</a>` : esc(c.data.name || 'Someone');
-    return `<div class="comment"><div class="who">${who}</div><div class="said"><p class="when">${fmtDate(c.date)}</p>${md(c.body, rel)}</div></div>`;
+    const name = esc(c.name || 'Someone');
+    const pic = c.avatar ? `<img src="${esc(c.avatar)}" width="80" height="80" alt="" loading="lazy">` : '';
+    const label = pic ? `${pic}<span>${name}</span>` : name;
+    const who = c.link ? `<a href="${esc(c.link)}">${label}</a>` : label;
+    return `<div class="comment"><div class="who">${who}</div><div class="said"><p class="when">${fmtDate(c.date)}</p>${c.html}</div></div>`;
   }).join('');
 }
 
@@ -429,7 +473,7 @@ const fill = (tpl, vars) => tpl.replace(/\{\{(\w+)\}\}/g, (_, k) => (k in vars ?
 
 const t0 = Date.now();
 const site = await loadSite();
-const [posts, madeRaw, comments, recipesRaw, introSrc, meetSrc, interestsSrc, friendsSrc] = await Promise.all([
+const [posts, madeRaw, mdComments, recipesRaw, introSrc, meetSrc, interestsSrc, friendsSrc] = await Promise.all([
   readDir(path.join(CONTENT, 'posts')).then(dated),
   readDir(path.join(CONTENT, 'made')),
   readDir(path.join(CONTENT, 'comments')).then(dated),
@@ -441,10 +485,21 @@ const recipes = loadRecipes(recipesRaw);
 const friends = lines(friendsSrc).map(splitPipe).filter(f => f[0]);
 const shown = posts.filter(n => n.body || list(n.data.images).length || n.data.image);
 
+// Comments: the ones pasted into content/comments always show. With
+// "comments: github" in site.md, approved GitHub issues show too, and
+// Add Comment opens the issue form instead of an email.
+const commentsRepo = site.comments === 'github' ? siteRepo() : null;
+if (site.comments === 'github' && !commentsRepo) warn("comments: github, but I can't tell which GitHub repo this is (no GITHUB_REPOSITORY or git remote); using email");
+let ghComments = [];
+
 let films = [];
 let newest = null;
 const stats = {};
 if (!OFFLINE) {
+  if (commentsRepo) {
+    try { ghComments = await githubComments(commentsRepo); }
+    catch (e) { warn(`GitHub comments skipped: ${e.message}`); }
+  }
   if (site.letterboxd && site.filmsToShow > 0) {
     try { films = await letterboxdFilms(site.letterboxd, site.filmsToShow); }
     catch (e) { warn(`Letterboxd skipped: ${e.message}`); }
@@ -458,6 +513,12 @@ if (!OFFLINE) {
     catch (e) { warn(`GitHub stats for ${repo} skipped: ${e.message}`); }
   }
 }
+
+const comments = [
+  ...mdComments.map(c => ({ name: c.data.name, link: c.data.link, avatar: '', date: c.date, html: md(c.body, '') })),
+  ...ghComments,
+].sort((a, b) => b.date - a.date);
+const commentMail = `mailto:${site.email}?subject=A%20comment%20for%20your%20profile`;
 
 const latest = shown[0];
 const mood = (latest && latest.data.mood) || site.mood;
@@ -522,8 +583,10 @@ const indexHtml = fill(tplIndex, {
   interests: renderInterests(interestsSrc, films, ''),
   details: renderDetails(site.details),
   details_box: hide(site.details.length),
-  comments: renderComments(comments, ''),
+  comments: renderComments(comments),
   comment_count: String(comments.length),
+  comment_link: esc(commentsRepo ? `https://github.com/${commentsRepo}/issues/new?template=comment.yml` : commentMail),
+  comment_alt: commentsRepo ? ` <span class="alt">· No GitHub? <a href="${esc(commentMail)}">Email it</a></span>` : '',
 });
 
 const page = (rel, title, crumbs, body) => fill(tplPage, { ...shared(rel), page_title: esc(title), crumbs, body });
@@ -556,4 +619,4 @@ if (friends.length > 8) writes.push(writeFile(path.join(OUT, 'friends', 'index.h
 writes.push(buildMedia());
 await Promise.all(writes);
 
-console.log(`Built ${shown.length} posts, ${made.length} projects, ${recipes.length} recipes, ${friends.length} friends, ${comments.length} comments, ${films.length} films${Object.keys(stats).length ? ', GitHub stats' : ''} in ${Date.now() - t0} ms.`);
+console.log(`Built ${shown.length} posts, ${made.length} projects, ${recipes.length} recipes, ${friends.length} friends, ${comments.length} comments${ghComments.length ? ` (${ghComments.length} from GitHub)` : ''}, ${films.length} films${Object.keys(stats).length ? ', GitHub stats' : ''} in ${Date.now() - t0} ms.`);

@@ -207,6 +207,12 @@ body[data-effect="pixels"]::after, body[data-effect="stars"]::after {
 .comment .who { background: var(--cell-th); padding: 8px; font-weight: 700; text-align: center; }
 .comment .said { padding: 8px 10px; background: var(--cell-td); }
 .comment .when { color: var(--muted); font-size: 12px; font-weight: 700; }
+.comment .who img { display: block; width: 80px; height: 80px; margin: 0 auto 6px; border: 1px solid var(--line); background: #1a1a1a; }
+.comment .who span { display: block; overflow-wrap: anywhere; }
+/* pictures in comments get a fixed height, so they can't push the page around when they load */
+.comment .said img { display: block; height: 160px; width: auto; max-width: 100%; object-fit: contain; margin: 6px 0; }
+.comment .said p { margin: 0 0 6px; }
+.comments .count .alt { color: var(--muted); }
 
 /* ---------- cookbook ---------- */
 .recipes { padding-left: 18px; margin-top: 6px; font-size: 13px; }
@@ -262,6 +268,8 @@ dialog.lb button { font: 700 13px var(--font); background: var(--head); color: v
   .pic, .pic img, .no-photo { width: 116px; }
   .comment { grid-template-columns: minmax(0, 1fr); }
   .comment .who { text-align: left; }
+  .comment .who > a, .comment .who:has(> img) { display: flex; align-items: center; gap: 8px; }
+  .comment .who img { width: 40px; height: 40px; margin: 0; flex: none; }
   .made { grid-template-columns: 72px minmax(0, 1fr); }
   .made .tile, .made .thumb, .made .thumb:not(:has(figure:not(.gone))) { width: 72px; }
   .made .thumb { grid-template-columns: 72px; }

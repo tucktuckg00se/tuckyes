@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  issues: read # GitHub comments (comments: github in site.md)
   pages: write
   id-token: write
 

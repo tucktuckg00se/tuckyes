@@ -1,0 +1,12 @@
+name: Comment on Tucker's profile
+description: Leave a comment for tuckyes.com. Tucker reads them all and approves them before they go up.
+title: "Comment"
+labels: ["comment"]
+body:
+  - type: textarea
+    id: comment
+    attributes:
+      label: Your comment
+      description: Once Tucker approves it, this shows in Friends Comments on tuckyes.com with your GitHub name and picture.
+    validations:
+      required: true

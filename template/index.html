@@ -45,7 +45,7 @@
       <ul class="actions">
         <li><a href="mailto:{{email}}">Send Message</a></li>
         <li><a href="mailto:{{email}}?subject=Add%20me%20to%20your%20friends">Add to Friends</a></li>
-        <li><a href="mailto:{{email}}?subject=A%20comment%20for%20your%20profile">Add Comment</a></li>
+        <li><a href="{{comment_link}}">Add Comment</a></li>
         <li><button type="button" id="share"><span>Forward to Friend</span></button></li>
         <li><a href="{{rel}}posts/feed.xml">Subscribe</a></li>
         <li><a href="https://letterboxd.com/{{letterboxd}}/">Watch With Me</a></li>
@@ -116,7 +116,7 @@
 
     <section class="box comments" id="comments" aria-labelledby="h-comments">
       <h2 id="h-comments">{{name}}'s Friends Comments</h2>
-      <p class="count">Displaying <strong>{{comment_count}}</strong> of <strong>{{comment_count}}</strong> comments. <a href="mailto:{{email}}?subject=A%20comment%20for%20your%20profile">Add a comment</a></p>
+      <p class="count">Displaying <strong>{{comment_count}}</strong> of <strong>{{comment_count}}</strong> comments. <a href="{{comment_link}}">Add a comment</a>{{comment_alt}}</p>
       {{comments}}
     </section>
   </div>
