@@ -3,4 +3,4 @@
 # Lines starting with # are ignored. With no friends listed, the box stays hidden.
 # - Sam | https://sams-site.com | sam.jpg
 
-- You could be here | https://tuckyes.com | ICP-bobby.png
+- Bobby 2 Dope | https://tuckyes.com | ICP-bobby.png
