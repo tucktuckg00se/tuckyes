@@ -53,15 +53,41 @@
     </section>
 
     <section class="box weather" aria-labelledby="h-weather" {{weather}}>
-      <h2 id="h-weather">{{name}}'s Weather</h2>
+      <h2 id="h-weather">{{name}}'s Weather <button type="button" class="wx-help" popovertarget="wx-scale" aria-label="What's °T?">?</button></h2>
       <div class="wx" aria-live="polite">
-        <p class="wx-t wait"><span class="wx-n">––.–</span><abbr title="°T = (°F − 68) ÷ 4.14">°T</abbr></p>
-        <div class="wx-side">
-          <p class="wx-fc">–°F · –°C</p>
-          <p class="wx-where"><span class="wx-place">in {{weather_place}}</span><span class="wx-mine"> · <button type="button">use mine</button></span></p>
+        <div class="wx-row">
+          <p class="wx-t wait"><span class="wx-n">––.–</span><abbr title="°T = (K − 293.15) ÷ 2.278">°T</abbr></p>
+          <div class="wx-side">
+            <p class="wx-fc">–°F · –°C</p>
+            <p class="wx-where"><span class="wx-place">in {{weather_place}}</span><span class="wx-mine"> · <button type="button">use mine</button></span></p>
+          </div>
         </div>
+        <p class="wx-wear">&nbsp;</p>
       </div>
     </section>
+
+    <!-- The ? in the Weather box opens this. Each row sits at its °T value (--t).
+         data-wear is what the Weather box says under the number when the
+         reading is closest to that row. -->
+    <div id="wx-scale" class="wx-pop" popover aria-labelledby="wx-scale-title">
+      <div class="wx-pop-head"><h3 id="wx-scale-title">°T, the humane scale</h3><button type="button" class="wx-close" popovertarget="wx-scale" popovertargetaction="hide" aria-label="Close">×</button></div>
+      <p>Based on how it feels: <strong>0°T is room temperature</strong> in everyday clothes.</p>
+      <p class="wx-pop-now">Right now: <strong>––.–°T</strong></p>
+      <ul class="wx-meter" style="--now: -10" aria-label="The scale from −10 to 10°T">
+        <li style="--t: 10"><b>10</b> Skin burns <i>109°F · 43°C</i></li>
+        <li style="--t: 7.46"><b>7.5</b> <em>Human body</em> <i>98.6°F · 37°C</i></li>
+        <li style="--t: 6" data-wear="Tank top, shorts, sandals"><b>6</b> Tank top, shorts, sandals <i>93°F · 34°C</i></li>
+        <li style="--t: 4" data-wear="T-shirt and shorts"><b>4</b> T-shirt and shorts <i>84°F · 29°C</i></li>
+        <li style="--t: 2" data-wear="T-shirt and pants"><b>2</b> T-shirt and pants <i>76°F · 25°C</i></li>
+        <li style="--t: 0" data-wear="Everyday clothes" class="room"><b>0</b> <strong>Room temp, everyday clothes</strong> <i>68°F · 20°C</i></li>
+        <li style="--t: -2" data-wear="Sweatshirt"><b>−2</b> Sweatshirt <i>60°F · 15°C</i></li>
+        <li style="--t: -4" data-wear="Jacket"><b>−4</b> Jacket <i>52°F · 11°C</i></li>
+        <li style="--t: -6" data-wear="Sweater and jacket"><b>−6</b> Sweater and jacket <i>43°F · 6°C</i></li>
+        <li style="--t: -8" data-wear="Heavy coat"><b>−8</b> Heavy coat <i>35°F · 2°C</i></li>
+        <li style="--t: -10" data-wear="Heavy coat, hat, gloves"><b>−10</b> Heavy coat, hat, gloves <i>27°F · −3°C</i></li>
+      </ul>
+      <p class="wx-pop-foot">°T = (K − 293.15) ÷ 2.278<br>Clothes based on the UTCI clothing model.</p>
+    </div>
 
     <section class="box table interests" aria-labelledby="h-interests">
       <h2 id="h-interests">{{name}}'s Interests</h2>

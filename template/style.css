@@ -120,7 +120,7 @@ body[data-effect="pixels"]::after, body[data-effect="stars"]::after {
 .url p { font-weight: 700; word-break: break-all; }
 
 /* weather, in degrees T: big T on the left, F, C and place beside it */
-.wx { display: flex; align-items: center; gap: 14px; }
+.wx-row { display: flex; align-items: center; gap: 14px; }
 .wx p { margin: 0; }
 /* sized up front for the widest reading, so filling it in never moves anything */
 .wx-t { flex: none; min-width: 3.65em; font-size: 32px; font-weight: 700; line-height: 1; color: var(--bright); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
@@ -130,9 +130,43 @@ body[data-effect="pixels"]::after, body[data-effect="stars"]::after {
 .wx-fc, .wx-where { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
 .wx-fc { font-size: 13px; font-weight: 700; color: var(--text); }
 .wx-where { font-size: 12px; color: var(--muted); }
+/* what to wear: always on the page (blank until the reading comes in) so the box never changes height */
+.wx .wx-wear { margin-top: 8px; font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wx-where button { font: inherit; color: var(--text); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-decoration-color: #666; text-underline-offset: 2px; }
 .wx-where button:hover { color: var(--bright); text-decoration-color: var(--bright); }
 .wx-where button:disabled { cursor: default; text-decoration: none; }
+
+/* the ? in the Weather heading, and the popup it opens */
+.weather > h2 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.wx-help { flex: none; width: 16px; height: 16px; padding: 0; border: 1px solid var(--muted); border-radius: 50%; background: none; color: var(--text); font: 700 10px/14px var(--font); cursor: pointer; }
+.wx-help:hover { color: var(--bright); border-color: var(--bright); }
+/* hidden unless open; browsers without popover support just never show it */
+.wx-pop { display: none; }
+.wx-pop:popover-open { display: block; }
+#wx-scale { margin: auto; width: min(340px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; padding: 0 0 4px; background: var(--box); color: var(--text); border: 1px solid var(--line); font-size: 13px; line-height: 1.5; }
+.wx-pop::backdrop { background: rgba(0, 0, 0, .6); }
+.wx-pop-head { display: flex; align-items: center; justify-content: space-between; padding: 5px 10px; background: var(--head); border-bottom: 1px solid var(--line); }
+.wx-pop-head h3 { font-size: 14px; font-weight: 700; color: var(--bright); }
+.wx-close { font: 700 18px/1 var(--font); background: none; border: 0; padding: 0 2px; color: var(--text); cursor: pointer; }
+.wx-close:hover { color: var(--bright); }
+.wx-pop > p { margin: 10px; }
+.wx-pop-now { font-variant-numeric: tabular-nums; }
+.wx-pop-foot { font-size: 12px; color: var(--muted); }
+
+/* the thermometer: 10 at the top to −10 at the bottom, a tick every 2°T on both
+   sides of the stem, and the stem filled up to the current reading */
+.wx-meter {
+  --step: 14px;
+  position: relative; list-style: none; padding: 0; margin: 18px 10px 20px;
+  height: calc(20 * var(--step) + 1px);
+  background: repeating-linear-gradient(to bottom, var(--muted) 0 1px, transparent 1px calc(2 * var(--step))) 41px 0 / 14px 100% no-repeat;
+}
+.wx-meter::before { content: ""; position: absolute; left: 44px; top: -4px; bottom: -4px; width: 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--box); }
+.wx-meter::after { content: ""; position: absolute; left: 46px; bottom: 0; width: 4px; border-radius: 2px; background: var(--bright); height: calc((clamp(-10, var(--now), 10) + 10) * var(--step)); }
+.wx-meter li { position: absolute; left: 0; right: 0; top: calc((10 - var(--t)) * var(--step)); transform: translateY(-50%); display: flex; align-items: baseline; font-size: 12px; line-height: var(--step); white-space: nowrap; }
+.wx-meter b { flex: none; width: 34px; margin-right: 30px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.wx-meter i { font-style: normal; color: var(--muted); margin-left: 6px; }
+.wx-meter .room b { color: var(--bright); font-weight: 800; } /* room temp stands out */
 
 /* tables: the old two-tone cells */
 .box table { width: 100%; border-collapse: separate; border-spacing: 3px; font-size: 13px; }

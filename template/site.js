@@ -191,7 +191,7 @@
     }
   }
 
-  // Weather, in degrees T: T = (F - 68) / 4.14, so 68°F is 0°T. Shows the
+  // Weather, in degrees T: T = (K - 293.15) / 2.278, so 20°C (68°F) is 0°T. Shows the
   // profile's town by default. Only uses the visitor's own weather if they've
   // already let this site see their location, or they click "use mine".
   // Their position is rounded to about a kilometer and never stored.
@@ -201,6 +201,7 @@
   if (wx && window.fetch) {
     const $ = s => wx.querySelector(s);
     const home = $('.wx-place').textContent;
+    const pop = document.getElementById('wx-scale');
     const mine = $('.wx-mine'), btn = mine.querySelector('button');
     // fixed decimals, a real minus sign, and never "-0"
     const fmt = (n, d = 0) => (Math.abs(n) < 0.5 / 10 ** d ? 0 : n).toFixed(d).replace('-', '−');
@@ -210,8 +211,19 @@
       if (!res.ok) throw new Error(`${res.status} from Open-Meteo`);
       const f = (await res.json())?.current?.temperature_2m;
       if (typeof f !== 'number') throw new Error('no temperature from Open-Meteo');
-      $('.wx-n').textContent = fmt((f - 68) / 4.14, 1);
+      const t = ((f - 32) * 5 / 9 - 20) / 2.278; // °F to °C, then (°C - 20) / 2.278
+      $('.wx-n').textContent = fmt(t, 1);
       $('.wx-t').classList.remove('wait');
+      // the ? popup: say the reading and fill the thermometer up to it
+      if (pop) {
+        pop.querySelector('.wx-pop-now').innerHTML = '';
+        pop.querySelector('.wx-pop-now').append(`Right now ${label}: `, Object.assign(document.createElement('strong'), { textContent: `${fmt(t, 1)}°T` }));
+        pop.querySelector('.wx-meter').style.setProperty('--now', Math.max(-10, Math.min(10, t)).toFixed(2));
+        // under the number: the clothes from the scale row closest to this reading
+        const rows = [...pop.querySelectorAll('.wx-meter li[data-wear]')];
+        const near = rows.reduce((a, b) => Math.abs(parseFloat(b.style.getPropertyValue('--t')) - t) < Math.abs(parseFloat(a.style.getPropertyValue('--t')) - t) ? b : a, rows[0]);
+        if (near) $('.wx-wear').textContent = `${near.dataset.wear} weather`;
+      }
       $('.wx-fc').textContent = `${fmt(f)}°F · ${fmt((f - 32) * 5 / 9)}°C`;
       $('.wx-place').textContent = label;
     };
