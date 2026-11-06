@@ -489,7 +489,8 @@ const indexHtml = fill(tplIndex, {
   portrait: site.portrait ? `<img src="${esc(thumb(site.portrait, 320, ''))}" alt="${esc(site.fullName)}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'no-photo',textContent:'No photo'}))">` : '<span class="no-photo">No photo</span>',
   headline: esc(site.headline),
   location: esc(site.location),
-  weather: site.weather ? `data-lat="${site.weather.lat}" data-lon="${site.weather.lon}" data-place="${esc(site.location.split(',')[0].trim() || 'Wenatchee')}"` : '',
+  weather: site.weather ? `data-lat="${site.weather.lat}" data-lon="${site.weather.lon}"` : 'hidden',
+  weather_place: esc(site.location.split(',')[0].trim() || 'Wenatchee'),
   status: renderStatus(latest),
   mood: mood ? `<p class="mood">Mood: <strong>${esc(mood)}</strong></p>` : '',
   music: (() => {

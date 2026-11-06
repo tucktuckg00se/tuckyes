@@ -195,12 +195,12 @@
   // profile's town by default. Only uses the visitor's own weather if they've
   // already let this site see their location, or they click "use mine".
   // Their position is rounded to about a kilometer and never stored.
+  // The box is already on the page at full size with dashes in it, so filling
+  // it in never moves anything. If the weather can't load, the dashes stay.
   const wx = document.querySelector('.weather[data-lat]');
   if (wx && window.fetch) {
-    wx.querySelector('.wx').innerHTML = '<p class="wx-t"><span class="wx-n"></span><abbr title="°T = (°F − 68) ÷ 4.14">°T</abbr></p>'
-      + '<div class="wx-side"><p class="wx-fc"></p><p class="wx-where"><span class="wx-place"></span>'
-      + '<span class="wx-mine"> · <button type="button">use mine</button></span></p></div>';
     const $ = s => wx.querySelector(s);
+    const home = $('.wx-place').textContent;
     const mine = $('.wx-mine'), btn = mine.querySelector('button');
     // fixed decimals, a real minus sign, and never "-0"
     const fmt = (n, d = 0) => (Math.abs(n) < 0.5 / 10 ** d ? 0 : n).toFixed(d).replace('-', '−');
@@ -211,18 +211,18 @@
       const f = (await res.json())?.current?.temperature_2m;
       if (typeof f !== 'number') throw new Error('no temperature from Open-Meteo');
       $('.wx-n').textContent = fmt((f - 68) / 4.14, 1);
+      $('.wx-t').classList.remove('wait');
       $('.wx-fc').textContent = `${fmt(f)}°F · ${fmt((f - 32) * 5 / 9)}°C`;
       $('.wx-place').textContent = label;
-      wx.hidden = false;
     };
-    const town = () => show(wx.dataset.lat, wx.dataset.lon, `in ${wx.dataset.place}`);
+    const town = () => show(wx.dataset.lat, wx.dataset.lon, home);
     const visitor = () => new Promise((ok, no) => navigator.geolocation.getCurrentPosition(ok, no,
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 30 * 60 * 1000 }))
       .then(p => show(p.coords.latitude.toFixed(2), p.coords.longitude.toFixed(2), 'where you are'));
 
     btn.addEventListener('click', () => {
       btn.disabled = true;
-      btn.textContent = 'finding you…';
+      btn.textContent = 'locating…';
       visitor().then(() => { mine.hidden = true; }, () => { mine.hidden = true; });
     });
 

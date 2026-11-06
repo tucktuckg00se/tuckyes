@@ -122,9 +122,12 @@ body[data-effect="pixels"]::after, body[data-effect="stars"]::after {
 /* weather, in degrees T: big T on the left, F, C and place beside it */
 .wx { display: flex; align-items: center; gap: 14px; }
 .wx p { margin: 0; }
-.wx-t { flex: none; font-size: 32px; font-weight: 700; line-height: 1; color: var(--bright); letter-spacing: -.01em; }
+/* sized up front for the widest reading, so filling it in never moves anything */
+.wx-t { flex: none; min-width: 3.65em; font-size: 32px; font-weight: 700; line-height: 1; color: var(--bright); letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+.wx-t.wait .wx-n { color: var(--line); } /* dim dashes until the reading comes in */
 .wx-t abbr { text-decoration: none; font-weight: 400; color: var(--text); cursor: help; }
 .wx-side { min-width: 0; }
+.wx-fc, .wx-where { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
 .wx-fc { font-size: 13px; font-weight: 700; color: var(--text); }
 .wx-where { font-size: 12px; color: var(--muted); }
 .wx-where button { font: inherit; color: var(--text); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-decoration-color: #666; text-underline-offset: 2px; }

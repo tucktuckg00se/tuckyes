@@ -52,9 +52,15 @@
       </ul>
     </section>
 
-    <section class="box weather" aria-labelledby="h-weather" hidden {{weather}}>
+    <section class="box weather" aria-labelledby="h-weather" {{weather}}>
       <h2 id="h-weather">{{name}}'s Weather</h2>
-      <div class="wx" aria-live="polite"></div>
+      <div class="wx" aria-live="polite">
+        <p class="wx-t wait"><span class="wx-n">––.–</span><abbr title="°T = (°F − 68) ÷ 4.14">°T</abbr></p>
+        <div class="wx-side">
+          <p class="wx-fc">–°F · –°C</p>
+          <p class="wx-where"><span class="wx-place">in {{weather_place}}</span><span class="wx-mine"> · <button type="button">use mine</button></span></p>
+        </div>
+      </div>
     </section>
 
     <section class="box table interests" aria-labelledby="h-interests">
